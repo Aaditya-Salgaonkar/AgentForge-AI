@@ -198,6 +198,7 @@ export default function Dashboard() {
             <Link href={"/emailagent"}><Button>Email</Button></Link>
             <Link href={"/emailsummary"}><Button>Email Summary</Button></Link>
             <Link href={"/hragent"}><Button>Hr agent</Button></Link>
+            <Link href={"/agentbuilderform"}><Button>Hr agent</Button></Link>
           </div>
         </div>
       </div>

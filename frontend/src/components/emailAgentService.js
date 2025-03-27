@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { fetchFineTuningData } from "./fetchAgentData";
 
 class EmailAgentService {
   constructor(apikey) {
@@ -9,8 +10,15 @@ class EmailAgentService {
 
   async generateResponse(prompt) {
     try {
+      // Fetch the fine-tuning data
+      const fineTuningData = await fetchFineTuningData();
+
+      // Include the fine-tuning data in the system prompt if available
       const systemPrompt = `
-        You are an AI email assistant for ${this.username}. Extract key details like:
+        You are an AI email assistant for ${this.username}.
+        ${fineTuningData ? `Use the following fine-tuning data to guide your responses:\n${fineTuningData}` : ""}
+        
+        Extract key details like:
         - Recipient name
         - Email subject
         - Purpose (e.g., request, apology, follow-up)
@@ -21,9 +29,11 @@ class EmailAgentService {
         Format the response as:
         Subject: [Subject Line]
         Email body: [Email Body]
-        only mention these things in your response and strictly adhere to the format
+        Only mention these things in your response and strictly adhere to the format.
       `;
-      const result = await this.model.generateContent(`${systemPrompt}\n\nUserInput :${prompt}`);
+
+      // Generate the response using the system prompt and user input
+      const result = await this.model.generateContent(`${systemPrompt}\n\nUserInput: ${prompt}`);
       const response = await result.response;
       return response.text();
     } catch (error) {
