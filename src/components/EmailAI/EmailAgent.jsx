@@ -5,7 +5,7 @@ import { gapi } from "gapi-script";
 import { CheckCircle2, Clock, Mail, Send, Bot } from "lucide-react";
 import { Card, Typography, Button, TextField, Grid, Box } from "@mui/material";
 
-// IMPORTANT: Move these to environment variables in production
+// COMMON
 const CLIENT_ID =
   "608829134548-k8skvvh5bo9cgh9savt95l28j47iqdi9.apps.googleusercontent.com";
 const API_KEY = "AIzaSyDAsj4Ya-34WgI5qu9zZ-qrf0dNa-ZuueQ";
@@ -13,8 +13,6 @@ const DISCOVERY_DOCS = [
   "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest",
 ];
 const SCOPES = "https://www.googleapis.com/auth/gmail.send";
-
-const agent = new EmailAgentService("AIzaSyDouKGIdQVnVXJg7AFTH36mehk6n25RAfg");
 
 const TimelineStep = ({
   icon: Icon,
@@ -56,7 +54,7 @@ const TimelineStep = ({
   );
 };
 
-const EmailAgent = () => {
+const EmailAgent = ({ AGENT_ID, userName }) => {
   const [input, setInput] = useState("");
   const [response, setResponse] = useState("");
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -64,6 +62,12 @@ const EmailAgent = () => {
   const [status, setStatus] = useState("idle");
   const [activeStep, setActiveStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState([]);
+
+  const agent = new EmailAgentService(
+    AGENT_ID,
+    "AIzaSyDouKGIdQVnVXJg7AFTH36mehk6n25RAfg",
+    userName
+  );
 
   const steps = [
     {
