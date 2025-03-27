@@ -1,15 +1,22 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Activity } from "lucide-react";
+import {
+  Activity
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
 
 import Header from "@/components/Header";
 import Link from "next/link";
 import SideBar from "@/components/SideBar";
-import Tile from "@/components/Tile";
+import EventExtractor from "@/components/EventExtractor";
 
 export default function Dashboard() {
   const [theme, setTheme] = useState("dark");
@@ -131,9 +138,11 @@ export default function Dashboard() {
     };
   }, []);
 
+  
+
   return (
     <div
-      className={`${theme} min-h-screen bg-gradient-to-br from-black to-slate-900 text-slate-100 relative overflow-hidden`}
+      className={`${theme} min-h-screen bg-gradient-to-br from-black to-slate-900 text-slate-100 relative overflow-hidden pb-40`}
     >
       {/* Background particle effect */}
       <canvas
@@ -167,45 +176,25 @@ export default function Dashboard() {
 
           {/* Main dashboard */}
           <div className="col-span-12 md:col-span-9 lg:col-span-10">
-            <div className="grid ">
+            <div className="grid gap-6">
               {/* System overview */}
               <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm overflow-hidden">
                 <CardHeader className="border-b border-slate-700/50 pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-slate-100 flex items-center text-3xl">
+                    <CardTitle className="text-slate-100 flex items-center">
                       <Activity className="mr-2 h-5 w-5 text-cyan-500" />
-                      Market Place
+                      Agent Builder
                     </CardTitle>
+                    
                   </div>
                 </CardHeader>
-               <div className="grid grid-cols-2">
-               <Tile
-                  name="AI Content Generator"
-                  developer="Nikola"
-                  price="49.99"
-                  description="An advanced AI-powered content generator for automated blogging."
-                />
-                <Tile
-                  name="AI Content Generator"
-                  developer="Nikola"
-                  price="49.99"
-                  description="An advanced AI-powered content generator for automated blogging."
-                />
-                <Tile
-                  name="AI Content Generator"
-                  developer="Nikola"
-                  price="49.99"
-                  description="An advanced AI-powered content generator for automated blogging."
-                />
-                <Tile
-                  name="AI Content Generator"
-                  developer="Nikola"
-                  price="49.99"
-                  description="An advanced AI-powered content generator for automated blogging."
-                />
-               </div>
+                <Card className={'m-10'}>
+                <EventExtractor/>
+                </Card>
+                
               </Card>
             </div>
+            
           </div>
         </div>
       </div>

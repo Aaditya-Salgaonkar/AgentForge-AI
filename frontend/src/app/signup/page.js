@@ -26,7 +26,7 @@ export default function SignUpPage() {
 
     if (!fullname.trim()) newErrors.fullname = "Full name is required.";
     if (!emailRegex.test(email)) newErrors.email = "Enter a valid email address.";
-    if (!passwordRegex.test(password)) newErrors.password = "Password must be at least 8 characters long and include a number or special character.";
+    if (!passwordRegex.test(password)) newErrors.password = "Password must be atleast 8 characters long and it should contain numbers, uppercase letters, lowercase letters and a special symbol";
 
     setErrors(newErrors);
 

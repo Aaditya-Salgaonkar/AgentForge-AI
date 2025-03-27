@@ -4,8 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Command, Globe } from "lucide-react";
-
+import { Bot, Command, Globe } from "lucide-react";
 export default function SideBar() {
   const pathname = usePathname(); // Get current route
 
@@ -16,6 +15,7 @@ export default function SideBar() {
           <nav className="space-y-2">
             <NavItem href="/home" icon={Command} label="Dashboard" active={pathname === "/home"} />
             <NavItem href="/marketplace" icon={Globe} label="Store" active={pathname === "/marketplace"} />
+            <NavItem href="/agentbuilder" icon={Bot} label="Agent Builder" active={pathname === "/agentbuilder"} />
           </nav>
         </CardContent>
       </Card>
