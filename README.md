@@ -10,8 +10,8 @@
 | Name               | Role                         | Email                        | Contact No.    |
 |--------------------|----------------------------|------------------------------|---------------|
 | **Aaditya Salgaonkar** | Team Lead, Backend & AI Integration | aadityasalgaonkar@gmail.com | 📞 9834696195 |
-| **Adarsh Naik**     | Frontend & UI/UX            | adarshnayak108@gmail.com     | 📞 7020515434 |
-| **Areen Dessai**    | Database & Monetization    | areendessai6161@gmail.com    | 📞 9322578406 |
+| **Adarsh Naik**     | AI agents lead| adarshnayak108@gmail.com     | 📞 7020515434 |
+| **Areen Dessai**    | Frontend lead , UI UX    | areendessai6161@gmail.com    | 📞 9322578406 |
 
 ---
 
@@ -21,15 +21,16 @@
   🔹 Designed and implemented the **backend architecture** using **Supabase**  
   🔹 Integrated **AI models (GPT, Gemini, Llama)** for dynamic AI agent responses  
   🔹 Developed **API routes** for AI agent customization and fine-tuning  
+  🔹 Integrated payment gateways like **Stripe**  
 
 - **Adarsh Naik**  
-  🔹 Designed the **frontend UI** using **Next.js, React Flow**  
-  🔹 Created a **drag-and-drop AI agent builder**  
-  🔹 Developed **responsive components** for a seamless user experience  
+  🔹 Designed the **AI agents**   
+  🔹 Created a **Templatised user friendly ai agent builder**  
+  🔹 Worked with google cloud to set up scopes and Oauth  
 
 - **Areen Dessai**  
   🔹 Designed and implemented the **database schema** using **Supabase**  
-  🔹 Integrated **Stripe for monetization** (Subscriptions, Pay-per-use)  
+  🔹 Integrated the **code modules** and led the **UI UX design** 
   🔹 Developed the **AI agent marketplace & transaction system**  
 
 ---
