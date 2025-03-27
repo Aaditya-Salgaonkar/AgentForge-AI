@@ -1,8 +1,9 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
-import EmailAgentService from "./emailAgentService";
+import { CheckCircle2, Clock, FileText, Send } from "lucide-react";
+import HrRecruitmentService from "./hrRecruitmentService";
 import { gapi } from "gapi-script";
-import { CheckCircle2, Clock, Mail, Send } from "lucide-react";
 
 // IMPORTANT: Move these to environment variables in production
 const CLIENT_ID = "608829134548-k8skvvh5bo9cgh9savt95l28j47iqdi9.apps.googleusercontent.com";
@@ -10,8 +11,9 @@ const API_KEY = "AIzaSyDAsj4Ya-34WgI5qu9zZ-qrf0dNa-ZuueQ";
 const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest"];
 const SCOPES = "https://www.googleapis.com/auth/gmail.send";
 
-const agent = new EmailAgentService("AIzaSyDouKGIdQVnVXJg7AFTH36mehk6n25RAfg");
+const agent = new HrRecruitmentService("AIzaSyDouKGIdQVnVXJg7AFTH36mehk6n25RAfg");
 
+// Define the TimelineStep component
 const TimelineStep = ({ icon: Icon, title, description, isActive, isCompleted }) => {
   return (
     <div className={`flex items-center mb-4 transition-all duration-500 ease-in-out ${isActive ? "opacity-100" : "opacity-50"}`}>
@@ -26,9 +28,11 @@ const TimelineStep = ({ icon: Icon, title, description, isActive, isCompleted })
   );
 };
 
-const EmailAgent = () => {
-  const [input, setInput] = useState("");
-  const [response, setResponse] = useState("");
+const HrRecruitmentAgent = () => {
+  const [jobDescription, setJobDescription] = useState("");
+  const [keywords, setKeywords] = useState("");
+  const [files, setFiles] = useState([]);
+  const [results, setResults] = useState([]);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState("idle");
@@ -38,26 +42,26 @@ const EmailAgent = () => {
   const steps = [
     {
       icon: Clock,
-      title: "Analyzing Prompt",
-      description: "Processing your input to generate an email...",
-      key: "analyzing",
+      title: "Uploading Resumes",
+      description: "Processing the uploaded resumes...",
+      key: "uploading",
     },
     {
-      icon: Mail,
-      title: "Generating Email",
-      description: "Creating a professional email response...",
-      key: "generating",
+      icon: FileText,
+      title: "Evaluating Resumes",
+      description: "Matching resumes with the job description...",
+      key: "evaluating",
     },
     {
       icon: Send,
-      title: "Sending Email",
-      description: "Sending the email to the recipient...",
+      title: "Sending Emails",
+      description: "Sending interview emails to approved candidates...",
       key: "sending",
     },
     {
       icon: CheckCircle2,
-      title: "Email Sent",
-      description: "Your email has been successfully sent!",
+      title: "Process Completed",
+      description: "All steps completed successfully!",
       key: "completed",
     },
   ];
@@ -96,7 +100,6 @@ const EmailAgent = () => {
     }
   }, []);
 
-  // Handle user sign-in
   const handleSignIn = () => {
     const authInstance = gapi.auth2.getAuthInstance();
     authInstance.signIn().then(() => {
@@ -105,7 +108,6 @@ const EmailAgent = () => {
     });
   };
 
-  // Handle user sign-out
   const handleSignOut = () => {
     const authInstance = gapi.auth2.getAuthInstance();
     authInstance.signOut().then(() => {
@@ -114,45 +116,58 @@ const EmailAgent = () => {
     });
   };
 
-  // Handle email generation and sending
-  const handleGenerateAndSend = async () => {
+  const handleFileUpload = (event) => {
+    const uploadedFiles = Array.from(event.target.files);
+    setFiles(uploadedFiles);
+  };
+
+  const handleEvaluateResumes = async () => {
     try {
-      setStatus("analyzing");
+      setStatus("uploading");
       setActiveStep(0);
       setCompletedSteps([]);
 
-      const generatedResponse = await agent.generateResponse(input);
-      setResponse(generatedResponse);
-
-      setStatus("generating");
+      // Step 1: Upload resumes
+      const resumeContents = await agent.extractResumeContents(files);
+      setStatus("evaluating");
       setActiveStep(1);
       setCompletedSteps([0]);
 
-      // Extract subject and body from the generated response
-      const subjectMatch = generatedResponse.match(/Subject:\s*(.+)/i);
-      const bodyMatch = generatedResponse.match(/Email body:\s*([\s\S]+)/i);
-      const subject = subjectMatch ? subjectMatch[1].trim() : "No Subject";
-      const body = bodyMatch ? bodyMatch[1].trim() : "No Email Body";
+      // Step 2: Evaluate resumes
+      const evaluationResults = await agent.evaluateResumes(resumeContents, jobDescription, keywords);
+      setResults(evaluationResults);
 
       setStatus("sending");
       setActiveStep(2);
       setCompletedSteps([0, 1]);
 
-      // Send the email using Gmail API
-      await sendEmail("adarshnayak108@gmail.com", subject, body);
+      // Step 3: Send emails to approved candidates
+      for (const result of evaluationResults) {
+        if (result.status === "Approved" && result.email) {
+          await sendEmail(result.email, "Interview Scheduling for Your Application", `
+            Dear Candidate,
+
+            Congratulations! Based on your resume, we are pleased to inform you that you have been shortlisted for an interview.
+
+            Please reply to this email to confirm your availability for the interview.
+
+            Best regards,
+            HR Team
+          `);
+          console.log("Email sent to approved candidates.");
+        }
+      }
 
       setStatus("completed");
+      
       setActiveStep(3);
       setCompletedSteps([0, 1, 2]);
-
-      alert("Email sent successfully!");
     } catch (err) {
-      console.error("Error generating or sending email:", err);
-      setError("Failed to generate or send email.");
+      console.error("Error evaluating resumes:", err);
+      setError("Failed to evaluate resumes.");
     }
   };
 
-  // Function to send email using Gmail API
   const sendEmail = async (recipient, subject, body) => {
     const email = [`To: ${recipient}`, `Subject: ${subject}`, "", body].join("\n");
 
@@ -168,15 +183,16 @@ const EmailAgent = () => {
           raw: encodedMessage,
         },
       });
+      console.log(`Email sent to ${recipient}`);
     } catch (err) {
-      console.error("Error sending email via Gmail API:", err);
+      console.error(`Error sending email to ${recipient}:`, err);
       throw err;
     }
   };
 
   return (
     <div className="max-w-md mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-center">Email Agent</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">HR Recruitment Agent</h1>
 
       {!isSignedIn ? (
         <button
@@ -195,47 +211,78 @@ const EmailAgent = () => {
       )}
 
       <textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Type your email prompt..."
+        value={jobDescription}
+        onChange={(e) => setJobDescription(e.target.value)}
+        placeholder="Enter the job description..."
         className="w-full p-2 border rounded mb-4"
         rows={4}
       />
 
+      <input
+        type="text"
+        value={keywords}
+        onChange={(e) => setKeywords(e.target.value)}
+        placeholder="Enter keywords (comma-separated)..."
+        className="w-full p-2 border rounded mb-4"
+      />
+
+      <input
+        type="file"
+        multiple
+        accept=".doc,.docx"
+        onChange={handleFileUpload}
+        className="w-full p-2 border rounded mb-4"
+      />
+
       <button
-        onClick={handleGenerateAndSend}
-        disabled={!isSignedIn || !input}
+        onClick={handleEvaluateResumes}
+        disabled={files.length === 0 || !jobDescription}
         className={`w-full px-4 py-2 rounded ${
-          isSignedIn && input
+          files.length > 0 && jobDescription
             ? "bg-blue-500 text-white hover:bg-blue-600"
             : "bg-gray-300 cursor-not-allowed"
         }`}
       >
-        Generate and Send Email
+        Evaluate Resumes
       </button>
 
       {error && <div className="mt-4 p-2 bg-red-100 text-red-800 rounded">{error}</div>}
 
       {status !== "idle" && (
         <div className="mt-4 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-4 text-center">Email Sending Process</h2>
+          <h2 className="text-xl font-bold mb-4 text-center">Recruitment Process</h2>
           <div className="relative pl-4 border-l-2 border-gray-200">
-  {steps.map((step, index) => {
-    const { key, ...props } = step; // Destructure key separately
-    return (
-      <TimelineStep
-        key={key} // Pass key directly
-        {...props} // Spread the remaining props
-        isActive={activeStep === index}
-        isCompleted={completedSteps.includes(index)}
-      />
-    );
-  })}
-</div>
+            {steps.map((step, index) => {
+              const { key, ...props } = step;
+              return (
+                <TimelineStep
+                  key={key}
+                  {...props}
+                  isActive={activeStep === index}
+                  isCompleted={completedSteps.includes(index)}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {results.length > 0 && (
+        <div className="mt-4 bg-gray-100 p-4 rounded-lg shadow-md text-black">
+          <h2 className="text-lg font-bold mb-2">Evaluation Results:</h2>
+          <ul className="list-disc pl-5">
+            {results.map((result, index) => (
+              <li key={index} className="mb-2">
+                <p><strong>Resume:</strong> {result.fileName}</p>
+                <p><strong>Status:</strong> {result.status}</p>
+                <p><strong>Email:</strong> {result.email || "Not Found"}</p>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
   );
 };
 
-export default EmailAgent;
+export default HrRecruitmentAgent;

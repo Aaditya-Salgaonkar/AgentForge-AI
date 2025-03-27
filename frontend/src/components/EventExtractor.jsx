@@ -70,16 +70,19 @@ function EventExtractor() {
     const initGapiClient = () => {
       gapi.load("client:auth2", async () => {
         try {
-          await gapi.client.init({
-            apiKey: API_KEY,
-            clientId: CLIENT_ID,
-            discoveryDocs: DISCOVERY_DOCS,
-            scope: SCOPES,
-          });
-
+          // Check if auth2 is already initialized
+          if (!gapi.auth2.getAuthInstance()) {
+            await gapi.client.init({
+              apiKey: API_KEY,
+              clientId: CLIENT_ID,
+              discoveryDocs: DISCOVERY_DOCS,
+              scope: SCOPES,
+            });
+          }
+  
           const authInstance = gapi.auth2.getAuthInstance();
           setIsSignedIn(authInstance.isSignedIn.get());
-
+  
           // Listen for sign-in state changes
           authInstance.isSignedIn.listen((signedIn) => {
             setIsSignedIn(signedIn);
@@ -90,7 +93,7 @@ function EventExtractor() {
         }
       });
     };
-
+  
     if (window.gapi) {
       initGapiClient();
     } else {

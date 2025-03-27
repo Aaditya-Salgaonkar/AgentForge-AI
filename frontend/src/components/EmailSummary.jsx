@@ -1,16 +1,16 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import EmailAgentService from "./emailAgentService";
 import { gapi } from "gapi-script";
-import { CheckCircle2, Clock, Mail, Send } from "lucide-react";
+import { CheckCircle2, Clock, Mail, List } from "lucide-react";
+import EmailSummaryService from "./emailSummaryService";
 
 // IMPORTANT: Move these to environment variables in production
 const CLIENT_ID = "608829134548-k8skvvh5bo9cgh9savt95l28j47iqdi9.apps.googleusercontent.com";
 const API_KEY = "AIzaSyDAsj4Ya-34WgI5qu9zZ-qrf0dNa-ZuueQ";
 const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest"];
-const SCOPES = "https://www.googleapis.com/auth/gmail.send";
+const SCOPES = "https://www.googleapis.com/auth/gmail.readonly";
 
-const agent = new EmailAgentService("AIzaSyDouKGIdQVnVXJg7AFTH36mehk6n25RAfg");
+const agent = new EmailSummaryService("AIzaSyDouKGIdQVnVXJg7AFTH36mehk6n25RAfg");
 
 const TimelineStep = ({ icon: Icon, title, description, isActive, isCompleted }) => {
   return (
@@ -27,37 +27,30 @@ const TimelineStep = ({ icon: Icon, title, description, isActive, isCompleted })
 };
 
 const EmailAgent = () => {
-  const [input, setInput] = useState("");
-  const [response, setResponse] = useState("");
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState("idle");
   const [activeStep, setActiveStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState([]);
+  const [summaries, setSummaries] = useState([]);
 
   const steps = [
     {
       icon: Clock,
-      title: "Analyzing Prompt",
-      description: "Processing your input to generate an email...",
-      key: "analyzing",
+      title: "Fetching Emails",
+      description: "Retrieving the latest 5 emails from your inbox...",
+      key: "fetching",
     },
     {
-      icon: Mail,
-      title: "Generating Email",
-      description: "Creating a professional email response...",
-      key: "generating",
-    },
-    {
-      icon: Send,
-      title: "Sending Email",
-      description: "Sending the email to the recipient...",
-      key: "sending",
+      icon: List,
+      title: "Summarizing Emails",
+      description: "Generating summaries for the retrieved emails...",
+      key: "summarizing",
     },
     {
       icon: CheckCircle2,
-      title: "Email Sent",
-      description: "Your email has been successfully sent!",
+      title: "Summaries Ready",
+      description: "Your email summaries are ready!",
       key: "completed",
     },
   ];
@@ -114,62 +107,53 @@ const EmailAgent = () => {
     });
   };
 
-  // Handle email generation and sending
-  const handleGenerateAndSend = async () => {
+  // Handle fetching and summarizing emails
+  const handleFetchAndSummarize = async () => {
     try {
-      setStatus("analyzing");
+      setStatus("fetching");
       setActiveStep(0);
       setCompletedSteps([]);
 
-      const generatedResponse = await agent.generateResponse(input);
-      setResponse(generatedResponse);
-
-      setStatus("generating");
+      // Fetch the latest 5 emails
+      const emails = await fetchEmails();
+      setStatus("summarizing");
       setActiveStep(1);
       setCompletedSteps([0]);
 
-      // Extract subject and body from the generated response
-      const subjectMatch = generatedResponse.match(/Subject:\s*(.+)/i);
-      const bodyMatch = generatedResponse.match(/Email body:\s*([\s\S]+)/i);
-      const subject = subjectMatch ? subjectMatch[1].trim() : "No Subject";
-      const body = bodyMatch ? bodyMatch[1].trim() : "No Email Body";
-
-      setStatus("sending");
-      setActiveStep(2);
-      setCompletedSteps([0, 1]);
-
-      // Send the email using Gmail API
-      await sendEmail("adarshnayak108@gmail.com", subject, body);
+      // Summarize the emails
+      const emailSummaries = await agent.summarizeEmails(emails);
+      setSummaries(emailSummaries);
 
       setStatus("completed");
-      setActiveStep(3);
-      setCompletedSteps([0, 1, 2]);
-
-      alert("Email sent successfully!");
+      setActiveStep(2);
+      setCompletedSteps([0, 1]);
     } catch (err) {
-      console.error("Error generating or sending email:", err);
-      setError("Failed to generate or send email.");
+      console.error("Error fetching or summarizing emails:", err);
+      setError("Failed to fetch or summarize emails.");
     }
   };
 
-  // Function to send email using Gmail API
-  const sendEmail = async (recipient, subject, body) => {
-    const email = [`To: ${recipient}`, `Subject: ${subject}`, "", body].join("\n");
-
-    const encodedMessage = btoa(email)
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
-
+  // Function to fetch the latest 5 emails using Gmail API
+  const fetchEmails = async () => {
     try {
-      await gapi.client.gmail.users.messages.send({
+      const response = await gapi.client.gmail.users.messages.list({
         userId: "me",
-        resource: {
-          raw: encodedMessage,
-        },
+        maxResults: 5,
+        q: "",
       });
+
+      const messages = response.result.messages || [];
+      const emailPromises = messages.map(async (message) => {
+        const email = await gapi.client.gmail.users.messages.get({
+          userId: "me",
+          id: message.id,
+        });
+        return email.result;
+      });
+
+      return Promise.all(emailPromises);
     } catch (err) {
-      console.error("Error sending email via Gmail API:", err);
+      console.error("Error fetching emails:", err);
       throw err;
     }
   };
@@ -194,44 +178,49 @@ const EmailAgent = () => {
         </button>
       )}
 
-      <textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Type your email prompt..."
-        className="w-full p-2 border rounded mb-4"
-        rows={4}
-      />
-
       <button
-        onClick={handleGenerateAndSend}
-        disabled={!isSignedIn || !input}
+        onClick={handleFetchAndSummarize}
+        disabled={!isSignedIn}
         className={`w-full px-4 py-2 rounded ${
-          isSignedIn && input
+          isSignedIn
             ? "bg-blue-500 text-white hover:bg-blue-600"
             : "bg-gray-300 cursor-not-allowed"
         }`}
       >
-        Generate and Send Email
+        Fetch and Summarize Emails
       </button>
 
       {error && <div className="mt-4 p-2 bg-red-100 text-red-800 rounded">{error}</div>}
 
       {status !== "idle" && (
         <div className="mt-4 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-4 text-center">Email Sending Process</h2>
+          <h2 className="text-xl font-bold mb-4 text-center">Email Summarization Process</h2>
           <div className="relative pl-4 border-l-2 border-gray-200">
-  {steps.map((step, index) => {
-    const { key, ...props } = step; // Destructure key separately
-    return (
-      <TimelineStep
-        key={key} // Pass key directly
-        {...props} // Spread the remaining props
-        isActive={activeStep === index}
-        isCompleted={completedSteps.includes(index)}
-      />
-    );
-  })}
-</div>
+            {steps.map((step, index) => {
+              const { key, ...props } = step; // Destructure key separately
+              return (
+                <TimelineStep
+                  key={key} // Pass key directly
+                  {...props} // Spread the remaining props
+                  isActive={activeStep === index}
+                  isCompleted={completedSteps.includes(index)}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {summaries.length > 0 && (
+        <div className="mt-4 bg-gray-100 p-4 rounded-lg shadow-md text-black">
+          <h2 className="text-lg font-bold mb-2">Email Summaries:</h2>
+          <ul className="list-disc pl-5">
+            {summaries.map((summary, index) => (
+              <li key={index} className="mb-2">
+                {summary}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
