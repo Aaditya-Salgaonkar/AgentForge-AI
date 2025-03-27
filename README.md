@@ -9,19 +9,19 @@
 
 | Name               | Role                         | Email                        | Contact No.    |
 |--------------------|----------------------------|------------------------------|---------------|
-| **Aaditya Salgaonkar** | Team Lead, Backend & AI Integration | aadityasalgaonkar@gmail.com | 📞 9834696195 |
+| **Aaditya Salgaonkar** | Team Lead | aadityasalgaonkar@gmail.com | 📞 9834696195 |
 | **Adarsh Naik**     | AI agents lead| adarshnayak108@gmail.com     | 📞 7020515434 |
-| **Areen Dessai**    | Frontend lead , UI UX    | areendessai6161@gmail.com    | 📞 9322578406 |
+| **Areen Dessai**    | Frontend lead  | areendessai6161@gmail.com    | 📞 9322578406 |
 
 ---
 
 ## **3️⃣ Individual Contributions**  
 
 - **Aaditya Salgaonkar**  
-  🔹 Designed and implemented the **backend architecture** using **Supabase**  
-  🔹 Integrated **AI models (GPT, Gemini, Llama)** for dynamic AI agent responses  
-  🔹 Developed **API routes** for AI agent customization and fine-tuning  
-  🔹 Integrated payment gateways like **Stripe**  
+  🔹 Designed and implemented the **db architecture** using **Supabase**  
+  🔹 Integrated **AI models (GPT, Gemini)** for dynamic AI agent responses  
+  🔹 Developed **API routes** for payment configuration
+  🔹 Integrated payment gateways ie **Stripe**  
 
 - **Adarsh Naik**  
   🔹 Designed the **AI agents**   
@@ -31,7 +31,7 @@
 - **Areen Dessai**  
   🔹 Designed and implemented the **database schema** using **Supabase**  
   🔹 Integrated the **code modules** and led the **UI UX design** 
-  🔹 Developed the **AI agent marketplace & transaction system**  
+  🔹 Developed the **AI agent marketplace & transaction system UI**  
 
 ---
 
@@ -68,10 +68,10 @@ Non-technical users struggle to build and monetize AI agents efficiently. Existi
 
 ### **✅ Our Solution: AgentForge-AI**  
 We built a **no-code/low-code AI agent creation platform** that allows users to:  
-- **Easily create AI agents** via a drag-and-drop interface  
-- **Customize & fine-tune AI models** without writing code  
-- **Integrate APIs & tools** (Google Sheets, Notion, CRMs)  
-- **Monetize AI agents** via subscriptions, pay-per-use, and a marketplace  
+- **Easily create AI agents** via a drag-and-drop interface  under development still!
+- **Customize & fine-tune AI models** without writing code  under development still!
+- **Integrate APIs & tools** (Google Calender for now)  under development still!
+- **Monetize AI agents** via subscriptions, and a marketplace  under development still!
 
 Our **Next.js + Supabase** approach ensures a **scalable, secure, and real-time AI agent creation experience.**  
 
@@ -81,9 +81,8 @@ Our **Next.js + Supabase** approach ensures a **scalable, secure, and real-time 
 
 ✅ **Frontend:** Next.js (App Router, Server Actions)  
 ✅ **Backend:** Supabase (Auth, Database, Edge Functions)  
-✅ **AI Models:** OpenAI (GPT), Google Gemini, Llama  
+✅ **AI Models:** Google Gemini
 ✅ **Payments:** Stripe (Subscriptions, Pay-per-use)  
-✅ **Deployment:** Vercel (Frontend), Supabase (Backend)  
 ✅ **Storage:** Supabase Storage (For AI agent configurations & files)  
 
 ---
@@ -115,16 +114,6 @@ npm run dev
 ```
 
 🔹 The app will be live at **http://localhost:3000** 🎉  
-
----
-
-## **🎯 Why We Will Win?**  
-✅ **Innovative AI agent monetization model** 💰  
-✅ **User-friendly no-code AI agent builder** 🛠  
-✅ **Seamless AI model customization & API integrations** 🤖  
-✅ **Scalable & Secure using Next.js & Supabase** 🏗  
-
-🔥 **AgentForge-AI is the future of AI agent creation!** 🚀  
 
 ---
 **🚀 Built with ❤️ by Team INITIATORS**
