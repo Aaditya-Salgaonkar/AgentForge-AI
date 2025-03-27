@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import EventExtractorService from "./EventExtractorService";
 import { gapi } from "gapi-script";
@@ -189,7 +191,7 @@ function EventExtractor() {
 
     try {
       const response = await gapi.client.calendar.events.insert({
-        calendarId: "aadityasalgaonkar@gmail.com",
+        calendarId: "adarshnayakwork101@gmail.com",
         resource: event,
       });
       console.log("Event created successfully:", response);
@@ -246,15 +248,18 @@ function EventExtractor() {
         <div className="mt-4  p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-bold mb-4 text-center text-white">Event Creation Process</h2>
           <div className="relative pl-4 border-l-2 border-gray-200">
-            {steps.map((step, index) => (
-              <TimelineStep
-                key={step.key}
-                {...step}
-                isActive={activeStep === index}
-                isCompleted={completedSteps.includes(index)}
-              />
-            ))}
-          </div>
+  {steps.map((step, index) => {
+    const { key, ...props } = step; // Destructure key separately
+    return (
+      <TimelineStep
+        key={key} // Pass key directly
+        {...props} // Spread the remaining props
+        isActive={activeStep === index}
+        isCompleted={completedSteps.includes(index)}
+      />
+    );
+  })}
+</div>
         </div>
       )}
 

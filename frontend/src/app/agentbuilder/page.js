@@ -17,6 +17,7 @@ import Header from "@/components/Header";
 import Link from "next/link";
 import SideBar from "@/components/SideBar";
 import EventExtractor from "@/components/EventExtractor";
+import EmailAgent from "@/components/EmailAgent";
 
 export default function Dashboard() {
   const [theme, setTheme] = useState("dark");
@@ -194,7 +195,7 @@ export default function Dashboard() {
                 
               </Card>
             </div>
-            
+            <Link href={"/emailagent"}><Button>Email</Button></Link>
           </div>
         </div>
       </div>
