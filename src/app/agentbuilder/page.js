@@ -42,7 +42,21 @@ export default function Dashboard() {
     },
     {
       id: "hr",
-      title: "hr Agent",
+      title: "HR Agent",
+      icon: <BotMessageSquare size={24} />,
+      color: "#ec4899",
+      component: <HrRecruitmentAgent />,
+    },
+    {
+      id: "emailSummary",
+      title: "Email Summary Agent",
+      icon: <FileText size={24} />,
+      color: "#10b981",
+      component: <EmailSummaryAgent />,
+    },
+    {
+      id: "hr",
+      title: "HR Agent",
       icon: <BotMessageSquare size={24} />,
       color: "#ec4899",
       component: <HrRecruitmentAgent />,
