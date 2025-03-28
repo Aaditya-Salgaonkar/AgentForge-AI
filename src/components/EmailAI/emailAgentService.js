@@ -1,7 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { fetchFineTuningData } from "../fetchAgentData";
-import supabase from "../../supabase";
-import getUserID from "../getUserID";
 
 class EmailAgentService {
   constructor(AGENT_ID, apikey, userName) {

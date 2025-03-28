@@ -1,4 +1,4 @@
-import supabase from "../../../supabase";
+import supabase from "../../supabase";
 
 export const fetchFineTuningData = async (AGENT_ID) => {
   try {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import SideBar from "@/components/SideBar";
@@ -14,65 +13,94 @@ import HrRecruitmentAgent from "@/components/HRAI/HrRecruitmentAgent";
 import { alpha } from "@mui/material/styles";
 import EmailSummaryAgent from "@/components/EmailSumAI/EmailSummary";
 import { FileText } from "lucide-react";
+import getUserID from "@/components/getUserID";
+import supabase from "../../../supabase";
+
+async function fetchUserData() {
+  const userId = await getUserID();
+  const { data, error } = await supabase
+    .from("users")
+    .select("name")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching user name:", error.message);
+    return "";
+  }
+  return data?.name || "";
+}
+
+async function fetchUserAgents() {
+  const userId = await getUserID();
+  const { data, error } = await supabase
+    .from("agents")
+    .select("id, agent_type")
+    .eq("user_id", userId);
+  if (error) {
+    console.error("Error fetching agents:", error.message);
+    return [];
+  }
+  return data || [];
+}
+
+const agentComponents = {
+  email: {
+    title: "Email Agent",
+    icon: <Mail size={24} />,
+    color: "#8b5cf6",
+    component: <EmailAgent />,
+  },
+  calendar: {
+    title: "Calendar Agent",
+    icon: <Calendar size={24} />,
+    color: "#0ea5e9",
+    component: <EventExtractor />,
+  },
+  hr: {
+    title: "HR Agent",
+    icon: <BotMessageSquare size={24} />,
+    color: "#ec4899",
+    component: <HrRecruitmentAgent />,
+  },
+  emailSummary: {
+    title: "Email Summary Agent",
+    icon: <FileText size={24} />,
+    color: "#10b981",
+    component: <EmailSummaryAgent />,
+  },
+};
 
 export default function Dashboard() {
   const [theme, setTheme] = useState("dark");
   const [isLoading, setIsLoading] = useState(false);
   const [activeAgent, setActiveAgent] = useState(null);
+  const [userName, setUserName] = useState("Loading...");
+  const [agents, setAgents] = useState([]);
+
+  useEffect(() => {
+    async function initializeDashboard() {
+      const name = await fetchUserData();
+      setUserName(name);
+
+      const userAgents = await fetchUserAgents();
+      const mappedAgents = userAgents.map(({ id, agent_type }) => ({
+        id: id,
+        agent_type: agent_type,
+        ...agentComponents[agent_type],
+      }));
+      setAgents(mappedAgents);
+    }
+    initializeDashboard();
+  }, []);
 
   lightenColor = (color, percent) => {
     const amount = Math.round((percent / 100) * 255);
     return alpha(color, 0.7);
   };
 
-  const agents = [
-    {
-      id: "email",
-      title: "Email Agent",
-      icon: <Mail size={24} />,
-      color: "#8b5cf6",
-      component: <EmailAgent />,
-    },
-    {
-      id: "calendar",
-      title: "Calendar Agent",
-      icon: <Calendar size={24} />,
-      color: "#0ea5e9",
-      component: <EventExtractor />,
-    },
-    {
-      id: "hr",
-      title: "HR Agent",
-      icon: <BotMessageSquare size={24} />,
-      color: "#ec4899",
-      component: <HrRecruitmentAgent />,
-    },
-    {
-      id: "emailSummary",
-      title: "Email Summary Agent",
-      icon: <FileText size={24} />,
-      color: "#10b981",
-      component: <EmailSummaryAgent />,
-    },
-    {
-      id: "hr",
-      title: "HR Agent",
-      icon: <BotMessageSquare size={24} />,
-      color: "#ec4899",
-      component: <HrRecruitmentAgent />,
-    },
-    {
-      id: "emailSummary",
-      title: "Email Summary Agent",
-      icon: <FileText size={24} />,
-      color: "#10b981",
-      component: <EmailSummaryAgent />,
-    },
-  ];
-
   const canvasRef = useRef(null);
 
-  // Particle effect
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
