@@ -87,8 +87,15 @@ export default function Dashboard() {
       const mappedAgents = userAgents.map(({ id, agent_type }) => ({
         id: id,
         agent_type: agent_type,
+        component: agentComponents[agent_type]?.component
+          ? React.cloneElement(agentComponents[agent_type].component, {
+              AGENT_ID: id,
+              userName: name,
+            })
+          : null,
         ...agentComponents[agent_type],
       }));
+
       setAgents(mappedAgents);
     }
     initializeDashboard();
