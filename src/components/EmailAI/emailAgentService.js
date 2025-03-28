@@ -2,17 +2,20 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { fetchFineTuningData } from "../fetchAgentData";
 
 class EmailAgentService {
-  constructor(AGENT_ID, apikey, userName) {
+  constructor(apikey) {
     this.genAI = new GoogleGenerativeAI(apikey);
     this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
   }
+  username = "Adarsh Naik";
 
   async generateResponse(prompt) {
     try {
-      this.initializeName();
-      const fineTuningData = await fetchFineTuningData(AGENT_ID);
+      // Fetch the fine-tuning data
+      const fineTuningData = await fetchFineTuningData();
+
+      // Include the fine-tuning data in the system prompt if available
       const systemPrompt = `
-        You are an AI email assistant for ${userName}.
+        You are an AI email assistant for ${this.username}.
         ${
           fineTuningData
             ? `Use the following fine-tuning data to guide your responses:\n${fineTuningData}`

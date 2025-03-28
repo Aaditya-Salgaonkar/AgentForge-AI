@@ -1,20 +1,38 @@
 "use client";
 
+import React from "react";
 import { useEffect, useState, useRef } from "react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import SideBar from "@/components/SideBar";
 import EventExtractor from "@/components/CalenderAI/EventExtractor";
 import EmailAgent from "@/components/EmailAI/EmailAgent";
-import { Grid, Typography, Box, Button, Divider } from "@mui/material";
-import { BotMessageSquare, Mail, Calendar, Activity } from "lucide-react";
-import { ArrowLeft } from "lucide-react";
+import {
+  Grid,
+  Typography,
+  Box,
+  Button,
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+} from "@mui/material";
+import {
+  BotMessageSquare,
+  Mail,
+  Calendar,
+  Activity,
+  Plus,
+  FileText,
+  ArrowLeft,
+} from "lucide-react";
 import HrRecruitmentAgent from "@/components/HRAI/HrRecruitmentAgent";
 import { alpha } from "@mui/material/styles";
 import EmailSummaryAgent from "@/components/EmailSumAI/EmailSummary";
-import { FileText } from "lucide-react";
 import getUserID from "@/components/getUserID";
 import supabase from "../../../supabase";
+import AgentBuilderForm from "@/components/AgenBuilderForm";
 
 async function fetchUserData() {
   const userId = await getUserID();
@@ -51,7 +69,7 @@ const agentComponents = {
     color: "#8b5cf6",
     component: <EmailAgent />,
   },
-  calendar: {
+  calender: {
     title: "Calendar Agent",
     icon: <Calendar size={24} />,
     color: "#0ea5e9",
@@ -69,6 +87,13 @@ const agentComponents = {
     color: "#10b981",
     component: <EmailSummaryAgent />,
   },
+  // Add a default fallback
+  default: {
+    title: "Custom Agent",
+    icon: <BotMessageSquare size={24} />,
+    color: "#64748b", // A neutral color
+    component: <div>Custom Agent</div>,
+  },
 };
 
 export default function Dashboard() {
@@ -77,6 +102,8 @@ export default function Dashboard() {
   const [activeAgent, setActiveAgent] = useState(null);
   const [userName, setUserName] = useState("Loading...");
   const [agents, setAgents] = useState([]);
+  const [openAgentBuilder, setOpenAgentBuilder] = useState(false);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
     async function initializeDashboard() {
@@ -84,29 +111,72 @@ export default function Dashboard() {
       setUserName(name);
 
       const userAgents = await fetchUserAgents();
-      const mappedAgents = userAgents.map(({ id, agent_type }) => ({
-        id: id,
-        agent_type: agent_type,
-        component: agentComponents[agent_type]?.component
-          ? React.cloneElement(agentComponents[agent_type].component, {
-              AGENT_ID: id,
-              userName: name,
-            })
-          : null,
-        ...agentComponents[agent_type],
-      }));
+      const mappedAgents = userAgents.map(({ id, agent_type }) => {
+        const agentInfo =
+          agentComponents[agent_type] || agentComponents.default;
+        return {
+          id: id,
+          agent_type: agent_type,
+          ...agentInfo,
+          component: agentInfo.component
+            ? React.cloneElement(agentInfo.component, {
+                AGENT_ID: id,
+                userName: userName,
+              })
+            : null,
+        };
+      });
 
       setAgents(mappedAgents);
     }
     initializeDashboard();
   }, []);
 
-  lightenColor = (color, percent) => {
-    const amount = Math.round((percent / 100) * 255);
-    return alpha(color, 0.7);
+  const handleToggleAgentBuilder = () => {
+    setOpenAgentBuilder(!openAgentBuilder);
   };
 
-  const canvasRef = useRef(null);
+  const handleAgentCreated = async () => {
+    handleToggleAgentBuilder();
+    const userAgents = await fetchUserAgents();
+    const mappedAgents = userAgents.map(({ id, agent_type }) => {
+      const agentInfo = agentComponents[agent_type] || agentComponents.default;
+      return {
+        id: id,
+        agent_type: agent_type,
+        ...agentInfo,
+        component: agentInfo.component
+          ? React.cloneElement(agentInfo.component, {
+              AGENT_ID: id,
+              userName: userName,
+            })
+          : null,
+      };
+    });
+    setAgents(mappedAgents);
+  };
+
+  const lightenColor = (color, percent) => {
+    if (!color) return "#64748b"; // Return a default color if undefined
+
+    // Handle cases where color might not be a hex value
+    const hexPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (!hexPattern.test(color)) return "#64748b";
+
+    const num = parseInt(color.replace("#", ""), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) + amt;
+    const G = ((num >> 8) & 0x00ff) + amt;
+    const B = (num & 0x0000ff) + amt;
+    return `#${(
+      0x1000000 +
+      (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+      (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+      (B < 255 ? (B < 1 ? 0 : B) : 255)
+    )
+      .toString(16)
+      .slice(1)}`;
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -185,22 +255,6 @@ export default function Dashboard() {
     };
   }, []);
 
-  function lightenColor(color, percent) {
-    const num = parseInt(color.replace("#", ""), 16);
-    const amt = Math.round(2.55 * percent);
-    const R = (num >> 16) + amt;
-    const G = ((num >> 8) & 0x00ff) + amt;
-    const B = (num & 0x0000ff) + amt;
-    return `#${(
-      0x1000000 +
-      (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
-      (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
-      (B < 255 ? (B < 1 ? 0 : B) : 255)
-    )
-      .toString(16)
-      .slice(1)}`;
-  }
-
   return (
     <div
       className={`${theme} min-h-screen bg-gradient-to-br from-black to-slate-900 text-slate-100 relative overflow-hidden pb-40`}
@@ -252,6 +306,7 @@ export default function Dashboard() {
                     display: "flex",
                     justifyContent: "start",
                     alignItems: "center",
+                    gap: 2,
                   }}
                 >
                   <Button
@@ -276,7 +331,28 @@ export default function Dashboard() {
                       fontWeight: "medium",
                     }}
                   >
-                    Some BTN
+                    Reset View
+                  </Button>
+                  <Button
+                    onClick={handleToggleAgentBuilder}
+                    variant="contained"
+                    startIcon={<Plus size={18} />}
+                    sx={{
+                      border: "2px solid #10b981",
+                      color: "#fff",
+                      backgroundColor: "#10b981",
+                      boxShadow: "0 0 8px rgba(16, 185, 129, 0.5)",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        backgroundColor: "rgba(16, 185, 129, 0.8)",
+                        boxShadow: "0 0 15px rgba(16, 185, 129, 0.8)",
+                        border: "2px solid #10b981",
+                      },
+                      padding: "8px 16px",
+                      fontWeight: "medium",
+                    }}
+                  >
+                    Create New Agent
                   </Button>
                 </Box>
                 <Grid
@@ -328,91 +404,66 @@ export default function Dashboard() {
                   ) : (
                     <>
                       <Grid container spacing={3} sx={{ p: 2 }}>
-                        {activeAgent ? (
-                          <Grid item size={{ xs: 12 }}>
-                            <Button
-                              onClick={() => setActiveAgent(null)}
-                              variant="contained"
+                        {agents.map((agent) => (
+                          <Grid
+                            item
+                            sx={{
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                            size={{ xs: 12, sm: 6, md: 4 }}
+                            key={agent.id}
+                          >
+                            <Box
+                              onClick={() => setActiveAgent(agent.id)}
                               sx={{
-                                mb: 3,
-                                backgroundColor: "#0ea5e9",
-                                color: "#fff",
-                                "&:hover": {
-                                  backgroundColor: "#3b82f6",
-                                  boxShadow: "0 0 15px rgba(14, 165, 233, 0.5)",
-                                },
-                              }}
-                              startIcon={<ArrowLeft size={18} />}
-                            >
-                              Back to Agents
-                            </Button>
-                            {
-                              agents.find((a) => a.id === activeAgent)
-                                ?.component
-                            }
-                          </Grid>
-                        ) : (
-                          agents.map((agent) => (
-                            <Grid
-                              item
-                              sx={{
+                                p: 3,
+                                height: "100%",
+                                width: "80%",
                                 display: "flex",
+                                flexDirection: "column",
                                 justifyContent: "center",
                                 alignItems: "center",
+                                textAlign: "center",
+                                backgroundColor: "#0f172a",
+                                borderRadius: "12px",
+                                border: `2px solid ${agent.color}`,
+                                boxShadow: `0 0 10px ${agent.color}`,
+                                transition: "all 0.3s ease",
+                                cursor: "pointer",
+                                "&:hover": {
+                                  transform: "translateY(-5px)",
+                                  boxShadow: `0 0 20px ${agent.color}`,
+                                },
                               }}
-                              size={{ xs: 12, sm: 6, md: 4 }}
-                              key={agent.id}
                             >
-                              <Box
-                                onClick={() => setActiveAgent(agent.id)}
+                              <Box sx={{ color: agent.color, mb: 2 }}>
+                                {agent.icon}
+                              </Box>
+                              <Typography
+                                variant="h6"
                                 sx={{
-                                  p: 3,
-                                  height: "100%",
-                                  width: "80%",
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  justifyContent: "center",
-                                  alignItems: "center",
-                                  textAlign: "center",
-                                  backgroundColor: "#0f172a",
-                                  borderRadius: "12px",
-                                  border: `2px solid ${agent.color}`,
-                                  boxShadow: `0 0 10px ${agent.color}`,
-                                  transition: "all 0.3s ease",
-                                  cursor: "pointer",
-                                  "&:hover": {
-                                    transform: "translateY(-5px)",
-                                    boxShadow: `0 0 20px ${agent.color}`,
-                                  },
+                                  fontWeight: "bold",
+                                  background: `linear-gradient(to right, ${
+                                    agent.color
+                                  }, ${lightenColor(agent.color, 20)})`,
+                                  WebkitBackgroundClip: "text",
+                                  WebkitTextFillColor: "transparent",
+                                  mb: 1,
                                 }}
                               >
-                                <Box sx={{ color: agent.color, mb: 2 }}>
-                                  {agent.icon}
-                                </Box>
-                                <Typography
-                                  variant="h6"
-                                  sx={{
-                                    fontWeight: "bold",
-                                    background: `linear-gradient(to right, ${
-                                      agent.color
-                                    }, ${lightenColor(agent.color, 20)})`,
-                                    WebkitBackgroundClip: "text",
-                                    WebkitTextFillColor: "transparent",
-                                    mb: 1,
-                                  }}
-                                >
-                                  {agent.title}
-                                </Typography>
-                                <Typography
-                                  variant="body2"
-                                  sx={{ color: "#94a3b8" }}
-                                >
-                                  Click to activate {agent.title.toLowerCase()}
-                                </Typography>
-                              </Box>
-                            </Grid>
-                          ))
-                        )}
+                                {agent.title}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "#94a3b8" }}
+                              >
+                                Click to activate {agent.title.toLowerCase()}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        ))}
                       </Grid>
                     </>
                   )}
@@ -422,6 +473,52 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Agent Builder Modal */}
+      <Dialog
+        open={openAgentBuilder}
+        onClose={handleToggleAgentBuilder}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: "#0f172a",
+            border: "2px solid #7c3aed",
+            boxShadow: "0 0 20px #7c3aed",
+            borderRadius: "12px",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            color: "#e2e8f0",
+            borderBottom: "1px solid #334155",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              background: "linear-gradient(to right, #7c3aed, #8b5cf6)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Create New Agent
+          </Typography>
+          <IconButton
+            onClick={handleToggleAgentBuilder}
+            sx={{ color: "#94a3b8" }}
+          >
+            <ArrowLeft size={24} />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          <AgentBuilderForm onSuccess={handleAgentCreated} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
