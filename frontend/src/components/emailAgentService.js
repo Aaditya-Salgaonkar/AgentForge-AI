@@ -7,6 +7,7 @@ class EmailAgentService {
     this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
   }
   username = "Adarsh Naik";
+  
 
   async generateResponse(prompt) {
     try {

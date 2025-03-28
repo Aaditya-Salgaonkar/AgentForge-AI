@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { useDropzone } from "react-dropzone";
+import mammoth from "mammoth"; // Import mammoth for processing Word files
 
 // Hardcoded Supabase keys
 const SUPABASE_URL = "https://mbzjjnszzzwbyngcdqyk.supabase.co";
@@ -14,6 +16,7 @@ const AgentBuilderForm = () => {
   const [agentType, setAgentType] = useState("");
   const [price, setPrice] = useState("");
   const [additionalData, setAdditionalData] = useState("");
+  const [uploadedFileContent, setUploadedFileContent] = useState(""); // Store file content
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [userId, setUserId] = useState(null); // Store logged-in user's ID
@@ -23,14 +26,12 @@ const AgentBuilderForm = () => {
   // Check for active session and fetch user details on component mount
   useEffect(() => {
     const fetchUser = async () => {
-      // Check if a session exists
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
         setError("No active session found. Please log in.");
         return;
       }
 
-      // Fetch the authenticated user's details
       const { data, error } = await supabase.auth.getUser();
       if (error) {
         console.error("Error fetching user:", error);
@@ -42,6 +43,51 @@ const AgentBuilderForm = () => {
 
     fetchUser();
   }, []);
+
+  // Handle file upload
+  const onDrop = (acceptedFiles) => {
+    const file = acceptedFiles[0];
+
+    if (!file) {
+      setError("No file selected.");
+      return;
+    }
+
+    if (file.type === "text/plain") {
+      // Handle .txt files
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const fileContent = event.target.result;
+        setUploadedFileContent(fileContent); // Store the file content
+      };
+      reader.readAsText(file);
+    } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      // Handle .docx files using mammoth
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const arrayBuffer = event.target.result;
+        try {
+          const { value: fileContent } = await mammoth.extractRawText({ arrayBuffer });
+          setUploadedFileContent(fileContent); // Store the extracted content
+          console.log("Extracted content:", fileContent); // Debugging log
+        } catch (err) {
+          console.error("Error processing Word file:", err);
+          setError("Failed to process the Word file. Please try again.");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      setError("Unsupported file type. Please upload a .txt or .docx file.");
+    }
+  };
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: {
+      "text/plain": [".txt"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+    },
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,13 +114,16 @@ const AgentBuilderForm = () => {
     setError(null);
     setSuccess(false);
 
+    // Combine additional data and uploaded file content
+    const combinedData = `${additionalData}\n${uploadedFileContent}`.trim();
+
     // Process the form data
     const formData = {
       name: agentName,
       agent_type: agentType,
       amount: parseFloat(price),
-      finetuning_data: additionalData || null,
-      user_id: userId, // Include the logged-in user's ID
+      finetuning_data: combinedData || null, // Include combined data if available
+      user_id: userId,
     };
 
     console.log("Form submitted:", formData);
@@ -149,6 +198,21 @@ const AgentBuilderForm = () => {
             placeholder="Enter the price"
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
           />
+        </div>
+
+        {/* Drag-and-Drop File Upload */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700">Upload File (Optional)</label>
+          <div
+            {...getRootProps()}
+            className="mt-1 flex justify-center items-center p-4 border-2 border-dashed border-gray-300 rounded-md cursor-pointer"
+          >
+            <input {...getInputProps()} />
+            <p>Drag and drop a text or Word file here, or click to select a file.</p>
+          </div>
+          {uploadedFileContent && (
+            <p className="mt-2 text-sm text-green-500">File uploaded successfully!</p>
+          )}
         </div>
 
         {/* Additional Data Textarea */}
